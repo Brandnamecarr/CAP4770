@@ -4,14 +4,17 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 import random
+import operations
 
 app = Flask(__name__)
 CORS(app)
+OPS = operations()
 
 @app.route('/api/data', methods=['GET'])
 def get_data():
+    myStr = OPS.apiTest()
     data = {
-        'message': 'Hello from the backend!'
+        'message': myStr
     }
     return jsonify(data)
 
