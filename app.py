@@ -8,13 +8,6 @@ import random
 app = Flask(__name__)
 CORS(app)
 
-@app.route('/api/data', methods=['GET'])
-def get_data():
-    data = {
-        'message': 'Hello from the backend!'
-    }
-    return jsonify(data)
-
 @app.route('/api/string', methods=['GET'])
 def send_string():
     data = {

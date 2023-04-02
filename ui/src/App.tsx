@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Form } from './form';
 
 function App() {
   const [data, setData] = useState({ message: '' });
@@ -6,6 +7,10 @@ function App() {
   useEffect(() => {
     fetchData();
   }, []);
+
+  const handleSubmit = (values: Record<string, string>) => {
+    console.log(values);
+  };
 
   // this is how we're going to retrieve data from the backend:
   const fetchData = () => {
@@ -18,6 +23,7 @@ function App() {
   return (
     <div>
       <h1>{data.message}</h1>
+      <Form onSubmit={handleSubmit} />
     </div>
   );
 }
