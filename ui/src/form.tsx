@@ -30,7 +30,7 @@ export const Form: React.FC<FormProps> = ({ onSubmit }) => {
     <div>
     <center>
     <h2>Welcome to our technology role salary estimator!</h2>
-    <p>By providing us with the below input, we will use data from the 2018 StackOverflow to estimate and model your expected salary. </p>
+    <p>By providing us with the below input, we will use data from the 2018 StackOverflow developer survey to estimate and model your expected salary. </p>
     </center>
     <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         <center>
