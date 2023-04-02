@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Form } from './form';
+import { Footer} from './footer';
 
 function App() {
   const [data, setData] = useState({ message: '' });
@@ -24,6 +25,7 @@ function App() {
     <div>
       <h1>{data.message}</h1>
       <Form onSubmit={handleSubmit} />
+      <Footer />
     </div>
   );
 }
