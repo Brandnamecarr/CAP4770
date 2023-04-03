@@ -2,8 +2,10 @@
     File contains the code for the logic of the application
 '''
 import os
+import json
 import pandas as pd
-from sklearn import *
+from sklearn import svm
+from sklearn.model_selection import train_test_split
 
 # create a log file for program operations
 logFile = open('data/logs/LOG.txt', "a+")
@@ -93,11 +95,20 @@ def validate_rows(df):
                 salary_counts[row['Salary']] += 1
             else:
                 salary_counts[row['Salary']] = 1
+    with open('convert.txt', 'w') as convert_file:
+        convert_file.write(json.dumps(currency_counts))
+    convert_file.write("\n")
+    convert_file.write("============================================================\n")
+    with open('convert.txt', 'w') as convert_file:
+        convert_file.write(json.dumps(salary_counts))
     try:
         del salary_counts['NaN']
     except:
         print("Unable to remove NaN")
     print(max(salary_counts, key=salary_counts.get))
+
+
+
 
 # helper function to check if a file exists.
 def checkFile(filePath):
@@ -106,6 +117,13 @@ def checkFile(filePath):
     else:
         print("DNE")
 
+# machine learning function for Support Vector Regression
+def svr_regression(df, career, experience, state, degreeType, technology):
+    X = '' # have to identify the columns that predict Y
+    Y = '' # have to identify which column is Y
+    regr = svm.SVR()
+    x_test, y_test, x_train, y_train = train_test_split(X, Y)
+    regr.predict([[career, experience, state, degreeType, technology]])
 
 def main():
     filepath = 'data/original/survey_results_public.csv'
