@@ -1,0 +1,29 @@
+ISSUES:
+
+1. Career Drop-Down Options:
+	a. Software Engineer (Back/front/full-stack, embedded, mobile)
+	b. Data Science (data, machine learning, database)
+	c. Management (product, C-suite)
+	d. Student (new-grads primarily)
+	e. Miscellaneous (Marketing, Design, UI/UX, Sales)
+
+2. Years of Experience Drop-Down:
+	a. just need to add more ranges (I think)
+
+3. State Drop-Down:
+	a. 'State' column does not exist- only country.
+
+4. Educational Background Drop-Down:
+	a. Associates
+	b. No Education
+	c. Bootcamp? Haven't seen this in the data yet, but possible value.
+
+5. Main Technology Drop-Down:
+	a. TBD.
+
+6. Calculating the average salary is fucked up, not sure why (I mean the data is skewed, there must be a large value or something). 
+	6a. Need to figure that out
+	6b. find a way to deal with 0s
+	6c. find a way to deal with large numbers
+
+7. Figure out the correct way to encode the labels

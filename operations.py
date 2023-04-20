@@ -1,11 +1,19 @@
 '''
     File contains the code for the logic of the application
 '''
+# random imports
 import os
 import json
+
+# important Data Science Libraries:
 import pandas as pd
-from sklearn import svm
+import numpy as np
+
+# important Machine Learning Libraries:
 from sklearn.model_selection import train_test_split
+from sklearn.svm import SVC
+from sklearn import tree
+from sklearn import preprocessing
 
 # create a log file for program operations
 logFile = open('data/logs/LOG.txt', "a+")
@@ -13,6 +21,14 @@ logFile = open('data/logs/LOG.txt', "a+")
 # test function for api to ensure that operations.py can send data to app.py
 def apiTest():
     return "Test from operations.py"
+
+# read column txt file.
+def read_column_file():
+    inFile = open("data/misc/columns.txt", "r+")
+    bleh = inFile.readlines()
+    for i in range (0, len(bleh)):
+        bleh[i] = bleh[i].rstrip()
+    return bleh
 
 # Analyzing the columns ==> output all the columns to a text file:
 def output_column_names(df):
@@ -23,93 +39,6 @@ def output_column_names(df):
         f.write("\n")
     f.close()
 
-# removes unwanted columns and drops dupes.
-def remove_columns_bulk(df):
-    # Undesirable columns are in data/misc/removing.txt:
-    f2 = open("data/misc/removing.txt", "r")
-    colsToRemove = f2.readlines()
-    for i in range(0, len(colsToRemove)):
-        thing = colsToRemove[i].rstrip()
-        colsToRemove[i] = thing
-    f2.close()
-
-    # remove them from the DataFrame:
-    print(df.shape)
-    colsDeleted = 0
-    for col in colsToRemove:
-        try:
-            df = df.drop(columns = [col])
-            colsDeleted += 1
-        except:
-            print("Error removing {} from the DataFrame.".format(col))
-    print("Removed {} columns from the dataframe.".format(colsDeleted))
-    print(df.shape)
-    
-    # also, drop any duplicate entries:
-    df = df.drop_duplicates()
-    return df
-
-def calc_column_difference(columnFile, removedFile):
-    # reading in all the comments
-    columns = open(columnFile, "r")
-    columnList = columns.readlines()
-    for i in range (0, len(columnList)):
-        tempStr = columnList[i].rstrip()
-        columnList[i] = tempStr 
-    columns.close()
-
-    # reading in all the removed columns
-    removed = open(removedFile, "r")
-    removedcols = removed.readlines()
-    for i in range(0, len(removedcols)):
-        tempStr = removedcols[i].rstrip()
-        removedcols[i] = tempStr
-    removed.close()
-    
-    kept_columns = []
-    kept_column_filepath = "data/misc/useful_columns.txt"
-    for item in columnList:
-        if item not in removedcols:
-            kept_columns.append(item)
-    
-    outFile = open(kept_column_filepath, "a+")
-    for item in kept_columns:
-        outFile.write(item)
-        outFile.write("\n")
-    outFile.close()
-    
-# parses through the rows and drops any with certain columns as NaN || None.
-# Second Data-Cleaning/Preprocessing function
-def validate_rows(df):
-    currency_counts = {}
-    for index, row in df.iterrows():
-        if row['Currency'] in currency_counts:
-            currency_counts[row['Currency']] += 1
-        else:
-            currency_counts[row['Currency']] = 1
-    
-    salary_counts = {}
-    for index, row in df.iterrows():
-        if row['Currency'] == 'U.S. dollars ($)':
-            if row['Salary'] in salary_counts:
-                salary_counts[row['Salary']] += 1
-            else:
-                salary_counts[row['Salary']] = 1
-    with open('convert.txt', 'w') as convert_file:
-        convert_file.write(json.dumps(currency_counts))
-    convert_file.write("\n")
-    convert_file.write("============================================================\n")
-    with open('convert.txt', 'w') as convert_file:
-        convert_file.write(json.dumps(salary_counts))
-    try:
-        del salary_counts['NaN']
-    except:
-        print("Unable to remove NaN")
-    print(max(salary_counts, key=salary_counts.get))
-
-
-
-
 # helper function to check if a file exists.
 def checkFile(filePath):
     if os.path.isfile(filePath):
@@ -117,33 +46,294 @@ def checkFile(filePath):
     else:
         print("DNE")
 
+# function to convert the 'DevType' column into Software/Data/Management categories.
+def format_DevType_Column(df):
+    sw_Count = 0
+    ds_count = 0
+    mgmt_count = 0
+    stu_count = 0
+    misc_count = 0
+    DevTypeList = [] # will contain strings
+    # iterate through the dataframe.
+    for i, j in df.iterrows():
+        # get the current type of developer.
+        current_entry = j['DevType']
+        newStr = DevType_Converter(current_entry)
+        DevTypeList.append(newStr)
+        if newStr == 'Software':
+            sw_Count += 1
+        elif newStr == 'Data Science':
+            ds_count += 1
+        elif newStr == 'Management':
+            mgmt_count += 1
+        elif newStr == 'Student':
+            stu_count += 1
+        elif newStr == 'Miscellaneous':
+            misc_count += 1
+    print("sw_Count: {}, ds_count: {}, mgmt_count: {}, stu_count: {}, misc_count: {}".format(sw_Count, ds_count, mgmt_count, stu_count, misc_count))
+    sum = sw_Count + ds_count + mgmt_count + stu_count + misc_count
+    print("Counted(sum): {}, lenStringsDevType: {}".format(sum, len(DevTypeList)))
+    
+    df['DevType'] = DevTypeList
+    return df
+        
+# helper function to return new string.
+# find() function returns -1 if string is not found.
+def DevType_Converter(s):
+    # software checks
+    if s.find('Back-end') != -1:
+        if s.find('Data') == -1 or s.find('data') == -1: 
+            return "Software"
+        elif s.find('Data') != -1 or s.find('data') != -1:
+            return 'Data Science'
+        
+    elif s.find('Front-end') != -1:
+        if s.find('Data') == -1 or s.find('data') == -1: 
+            return 'Software'
+        elif s.find('Data') != -1 or s.find('data') != -1:
+            return 'Data Science'
+        
+    elif s.find('Full-stack') != -1:
+        if s.find('Data') == -1 or s.find('data') == -1: 
+            return 'Software'
+        elif s.find('Data') != -1 or s.find('data') != -1:
+            return 'Data Science'
+        
+    elif s.find('Mobile') != -1:
+        return "Software"
+    
+    elif s.find('Embedded applications') != -1 or s.find('devices developer') != -1:
+        return "Software"
+        
+    # data science checks
+    elif s.find('Data') != -1 or s.find('data') != -1:
+        return "Data Science"
+    
+    elif s.find('Database') != -1 or s.find('maching learning') != -1 or s.find('Machine Learning') != -1:
+        return 'Data Science'
+        
+    # management roles
+    elif s.find('Manager') != -1 or s.find('C-suite') != -1 or s.find('executive') != -1 or s.find('manager') != -1:
+        return "Management"
+    
+    # student entries
+    elif s.find('Student') != -1:
+        return "Student"
+    
+    # error catching & logging
+    else:
+        #print ('UNABLE TO MATCH {}'.format(s))
+        return "Miscellaneous"
+
+
+# testing DevType_Converter:
+def test_DevType_Converter():
+    # TEST 1: should return "Software"
+    s = "Back-end" 
+    testStr = DevType_Converter(s)
+    print('Test 1: got back: {}'.format(testStr))
+    try:
+        assert testStr == 'Software', 'Function should return Software'
+        print('Test 1 Passed')
+    except:
+        print("Test 1 failure: test_DevType_Converter")
+    print()
+    
+    # TEST 2: should return 'Data science'
+    s = "Database specialist"
+    testStr = DevType_Converter(s)
+    print('Test 2: got back: {}'.format(testStr))
+    try:
+        assert testStr == 'Data Science', 'Function should return Data Science'
+        print('Test 2 Passed')
+    except:
+        print('Test 2 failure: test_DevType_Converter')
+    print()
+    
+    # TEST 3: should return "Management"
+    s = 'Product Manager'
+    testStr = DevType_Converter(s)
+    print('Test 3: got back: {}'.format(testStr))
+    try:
+        assert testStr == 'Management', 'Function should return Management'
+        print('Test 3 Passed')
+    except:
+        print("Test 3 failure: test_DevType_Converter")
+    print()
+    
+    # complex search term: 
+    # TEST 4: should return 'Software'
+    s = 'Front-end; Database Applications Developer'
+    testStr = DevType_Converter(s)
+    print('Test 4: got back: {}'.format(testStr))
+    try:
+        assert testStr == 'Software', 'Function should return Software'
+        print('Test 4 Passed')
+    except:
+        print('Test 4 failure: test_DevType_Converter')
+    print()
+
+# YearsExperience_Converter(df)
+def YearsExperience_Converter(df):
+    yearsList = []
+    for i, j in df.iterrows():
+        value = j['YearsCoding']
+        value = value.replace(' years', '')
+        value = value.replace(' or more', '+')
+        if value.find('nan') != -1:
+            print("HERE")
+            value = '0'
+        yearsList.append(value)
+    df['YearsCoding'] = yearsList
+    return df
+
+# Education_Converter
+def Education_Converter(df):
+    # educations holds the extracted 
+    educations = []
+    for i, j in df.iterrows():
+        value = j['FormalEducation']
+        if value.find('Some') != -1:
+            educations.append('Some College/No Degree')
+        
+        elif value.find('Associate') != -1:
+            educations.append("Associate's")
+            
+        elif value.find("Bachelor") != -1:
+            educations.append("Bachelor's")
+            
+        elif value.find("Maste") != -1:
+            educations.append("Master's")
+            
+        elif value.find('doctoral') != -1:
+            educations.append("Doctoral")
+            
+        elif value.find('Secondary') != -1:
+            educations.append('Secondary (High School)')
+        
+        elif value.find('I never completed') != -1:
+            educations.append('None')
+            
+        elif value.find('Primary') != -1:
+            educations.append('Elementary')
+        
+        elif value.find('Professional') != -1:
+            educations.append('Professional (JD, MD, etc.)')
+        else: 
+            print(value)
+    
+    df['FormalEducation'] = educations
+    return df
+
+# salary formatter:
+def Salary_Formatter(df):
+    # first remove nan entries from the dataframe.
+    df = Helper_Salary_Formatter(df)
+    
+    # calculate average (so skewed rn, not sure why)
+    avg = df['Salary'].mean()
+    # print (avg)
+    
+    # return df with formatted salary column
+    return df  
+
+# salary formatter helper:
+def Helper_Salary_Formatter(df):
+    noNans = []
+    for i, j in df.iterrows():
+        temp = j['Salary']
+        if temp == 'nan':
+            noNans.append(0)
+        else:
+            try:
+                noNans.append(float(temp))
+            except:
+                
+                if temp.find('.') != -1:
+                    temp = temp.replace('.', '')
+                    if temp.find(',') != -1:
+                        temp = temp.replace(',', '')
+                    noNans.append(float(temp))
+                    
+                elif temp.find(',') != -1:
+                    temp = temp.replace(',', '')
+                    noNans.append(float(temp))
+    for i in range(0, len(noNans)):
+        if noNans[i] < 75000:
+            noNans[i] += 25000
+        elif noNans[i] > 1000000:
+            noNans[i] = noNans[i] / 100
+        elif noNans[i] == 0:
+            noNans[i] = 50000
+    df['Salary'] = noNans
+    return df
+
+# ML Function: Predicting Salary
+def predict_salary(df):
+    # set x & y to the respective data columns.
+    X = df[['DevType','YearsCoding', 'FormalEducation', 'LanguageWorkedWith']]
+    Y = df[['Salary']]
+    
+    # call test_train_split 
+    x_train, x_test, y_train, y_test = train_test_split(X, Y)
+    
+#     # initialize and train the model using SVM classifier (SVC)
+#     classifier = SVC()
+#     classifier.fit(x_train, y_train)
+    
+#     # calculate the accuracy score of the model
+#     score = classifier.score(x_test, y_test)
+#     print("Score: {}".format(score))
+    
+    # need to encode some features so the model will run correctly
+    le = preprocessing.LabelEncoder()
+    originalValues = df['DevType'].tolist() # catch OG values from DEVTYPE column.
+    df['DevType'] = le.fit_transform(df['DevType'])
+    le.fit(df['DevType'])
+    print(le.classes_)
+    
+    # initialize and train the model using the DecisionTreeClassifier (clf)
+#     clf = tree.DecisionTreeClassifier()
+#     clf = clf.fit(X, Y)
+#     score = clf.score(X, Y)
+#     print(score)
+
+
 # machine learning function for Support Vector Regression
 def svr_regression(df, career, experience, state, degreeType, technology):
     X = '' # have to identify the columns that predict Y
     Y = '' # have to identify which column is Y
-    regr = svm.SVR()
+    regr = None
     x_test, y_test, x_train, y_train = train_test_split(X, Y)
     regr.predict([[career, experience, state, degreeType, technology]])
 
 def main():
-    filepath = 'data/original/survey_results_public.csv'
-    checkFile(filepath)
+    #test_DevType_Converter()
+    # print(os.getcwd())
+    # checkFile('data/original/survey_results_public.csv')
+    # get the list of columns
+    columnList = read_column_file()
 
-    # read in the df from the CSV file.
-    df = pd.read_csv(filepath, low_memory=False)
-    
-    df = remove_columns_bulk(df) 
+    # import the CSV file.
+    df = pd.read_csv('data/original/survey_results_public.csv', low_memory=False, index_col=False)
 
-    #calc_column_difference("data/misc/columns.txt", "data/misc/removing.txt")
+    # drop rows where country != 'United States'
+    df_new = df[df['Country'] == 'United States']
 
-    validate_rows(df)
+    # drop unnecessary columns from the data frame.
+    df1 = df_new[['DevType','YearsCoding', 'FormalEducation', 'LanguageWorkedWith', 'Salary']]
+    df1 = df1.dropna()
 
-    # print("Original shape: {}".format(df.shape))
-    # df_unique = df.drop_duplicates()
-    # df_unique.to_csv('data\cleaned\data-only-unique-rows.csv', index=False)
+    # running into data problems, need to reformat some of the data values to help with prediction
+    df2 = df1.copy()
 
-    # # QA check - export identified duplicates to a new CSV
-    # df_duplicates = df[~df.index.isin(df_unique.index)]
-    # df_duplicates.to_csv('data\extracted\data_removed_duplicates.csv', index=False)
+    # branches to function to format DevType column. Replaces the DevType column in the df.
+    df2 = format_DevType_Column(df2)
+    print(df2.columns)
+    df2 = YearsExperience_Converter(df2)
+    df2 = Education_Converter(df2)
+    df2 = Salary_Formatter(df2)
+
+    predict_salary(df2)
 
 main()

@@ -6,15 +6,16 @@ function App() {
   const [data, setData] = useState({ message: '' });
 
   useEffect(() => {
-    fetchData();
+    //fetchData(NULL);
   }, []);
 
   const handleSubmit = (values: Record<string, string>) => {
     console.log(values);
+    fetchData(values);
   };
 
   // this is how we're going to retrieve data from the backend:
-  const fetchData = () => {
+  const fetchData = (values: Record<string, string>) => {
     fetch('http://localhost:5000/api/data')
       .then(response => response.json())
       .then(data => setData(data))
