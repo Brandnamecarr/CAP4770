@@ -27,3 +27,5 @@ ISSUES:
 	6c. find a way to deal with large numbers
 
 7. Figure out the correct way to encode the labels
+
+8. Clean up the files in the data folder
