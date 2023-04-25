@@ -12,8 +12,10 @@ import numpy as np
 # important Machine Learning Libraries:
 from sklearn.model_selection import train_test_split
 from sklearn.svm import SVC
+from sklearn.pipeline import make_pipeline
 from sklearn import tree
 from sklearn import preprocessing
+from sklearn.preprocessing import StandardScaler
 
 # create a log file for program operations
 logFile = open('data/logs/LOG.txt', "a+")
@@ -234,8 +236,13 @@ def Salary_Formatter(df):
     avg = df['Salary'].mean()
     # print (avg)
     
+    # convert from float to int
+    conv_list = []
+    for i, j in df.iterrows():
+        conv_list.append(int(j['Salary']))
+    
     # return df with formatted salary column
-    return df  
+    return df 
 
 # salary formatter helper:
 def Helper_Salary_Formatter(df):
@@ -268,8 +275,48 @@ def Helper_Salary_Formatter(df):
     df['Salary'] = noNans
     return df
 
-# ML Function: Predicting Salary
-def predict_salary(df):
+# ML Function
+# will add parameters here to format the 'input' from the form on the React site.
+def predict_salary(df): 
+    print("Data types:")
+    print(df.dtypes)
+    # need to encode some features so the model will run correctly
+    le = preprocessing.LabelEncoder()
+    originalValues = df['DevType'].tolist() # catch OG values from DEVTYPE column.
+    #df['DevType'] = le.fit_transform(df['DevType'])
+    le.fit(df['DevType'])
+    #print(type(le.classes_))
+    encoded_labels = le.transform(df['DevType'])
+    df['DevType'] = encoded_labels
+    
+    # encode the YearsExperience
+    le_YE = preprocessing.LabelEncoder()
+    originalValues_YE = df['YearsCoding'].tolist()
+    le_YE.fit(df['YearsCoding'])
+    YE_encoded_labels = le_YE.transform(df['YearsCoding'])
+    df['YearsCoding'] = YE_encoded_labels
+    
+    # encode the FormalEducation column
+    le_FE = preprocessing.LabelEncoder()
+    originalValues_FE = df['FormalEducation'].tolist()
+    le_FE.fit(df['FormalEducation'])
+    FE_encoded_labels = le_FE.transform(df['FormalEducation'])
+    df['FormalEducation'] = FE_encoded_labels
+    
+    # encode the LanguagesWorkWith column
+    le_PL = preprocessing.LabelEncoder()
+    originalValues_PL = df['LanguageWorkedWith'].tolist()
+    le_PL.fit(df['LanguageWorkedWith'])
+    PL_encoded_labels = le_PL.transform(df['LanguageWorkedWith'])
+    df['LanguageWorkedWith'] = PL_encoded_labels
+    
+    le_salary = preprocessing.LabelEncoder()
+    originalValues_sal = df['Salary'].tolist()
+    le_salary.fit(df['Salary'])
+    salary_encoded_labels = le_salary.transform(df['Salary'])
+    df['Salary'] = salary_encoded_labels
+    
+    
     # set x & y to the respective data columns.
     X = df[['DevType','YearsCoding', 'FormalEducation', 'LanguageWorkedWith']]
     Y = df[['Salary']]
@@ -277,26 +324,21 @@ def predict_salary(df):
     # call test_train_split 
     x_train, x_test, y_train, y_test = train_test_split(X, Y)
     
+    
 #     # initialize and train the model using SVM classifier (SVC)
-#     classifier = SVC()
-#     classifier.fit(x_train, y_train)
+    clf = tree.DecisionTreeClassifier()
+    clf.fit(x_train, y_train)
+    # calculate the accuracy score of the model
+    score = clf.score(x_test, y_test)
+    print("Score: {}".format(score))
     
-#     # calculate the accuracy score of the model
-#     score = classifier.score(x_test, y_test)
-#     print("Score: {}".format(score))
+    clf2 = make_pipeline(StandardScaler(), SVC(gamma='auto'))
+    clf2.fit(x_train, y_train)
+    score2 = clf2.score(x_test, y_test)
+    print("Score2: {}".format(score2))
     
-    # need to encode some features so the model will run correctly
-    le = preprocessing.LabelEncoder()
-    originalValues = df['DevType'].tolist() # catch OG values from DEVTYPE column.
-    df['DevType'] = le.fit_transform(df['DevType'])
-    le.fit(df['DevType'])
-    print(le.classes_)
     
-    # initialize and train the model using the DecisionTreeClassifier (clf)
-#     clf = tree.DecisionTreeClassifier()
-#     clf = clf.fit(X, Y)
-#     score = clf.score(X, Y)
-#     print(score)
+    return df
 
 
 # machine learning function for Support Vector Regression
@@ -334,6 +376,6 @@ def main():
     df2 = Education_Converter(df2)
     df2 = Salary_Formatter(df2)
 
-    predict_salary(df2)
+    df2 = predict_salary(df2)
 
 main()
