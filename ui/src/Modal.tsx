@@ -7,10 +7,12 @@ type ModalProps = {
 
 export const Modal: React.FC<ModalProps> = ({ onClose }) => {
   return (
-    <div className="modal">
-      <div className="modal-content">
+    <div className="modal-overlay">
+      <div className="modal">
         <span className="close" onClick={onClose}>&times;</span>
-        <img src={AverageSalary} alt="Average Salary" />
+        <div className="modal-content">
+          <img src={AverageSalary} alt="Average Salary" />
+        </div>
       </div>
     </div>
   );

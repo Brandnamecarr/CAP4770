@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import './App.css';
 
 interface FormProps {
   onSubmit: (values: Record<string, string>) => void;
@@ -16,9 +17,14 @@ export const Form: React.FC<FormProps> = ({ onSubmit }) => {
   const [state, setState] = useState('');
   const [education, setEducation] = useState('');
   const [technology, setTechnology] = useState('');
+  const [formError, setFormError] = useState('');
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (!isFormValid()) {
+      setFormError('Please fill in all fields');
+      return;
+    }
     onSubmit({ career, yearsOfExperience, state, education, technology });
   };
 
@@ -27,67 +33,99 @@ export const Form: React.FC<FormProps> = ({ onSubmit }) => {
   };
 
   return (
-    <div>
-    <center>
-    <h2>Welcome to our technology role salary estimator!</h2>
-    <p>By providing us with the below input, we will use data from the 2018 StackOverflow developer survey to estimate and model your expected salary. </p>
-    </center>
-    <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        <center>
-      <p>
-        I am a&nbsp;
-        <select value={career} onChange={(event) => setCareer(event.target.value)}>
-          <option value="">Select career</option>
-          {careerOptions.map((option) => (
-            <option key={option} value={option}>
-              {option}
-            </option>
-          ))}
-        </select>
-        &nbsp;with&nbsp;
-        <select value={yearsOfExperience} onChange={(event) => setYearsOfExperience(event.target.value)}>
-          <option value="">Select years of experience</option>
-          {yearsOptions.map((option) => (
-            <option key={option} value={option}>
-              {option}
-            </option>
-          ))}
-        </select>
-        &nbsp;living in&nbsp;
-        <select value={state} onChange={(event) => setState(event.target.value)}>
-          <option value="">Select state</option>
-          {stateOptions.map((option) => (
-            <option key={option} value={option}>
-              {option}
-            </option>
-          ))}
-        </select>
-        . My educational background is&nbsp;
-        <select value={education} onChange={(event) => setEducation(event.target.value)}>
-          <option value="">Select education background</option>
-          {educationOptions.map((option) => (
-            <option key={option} value={option}>
-              {option}
-            </option>
-          ))}
-        </select>
-        <br />
-        &nbsp;and my main technology is&nbsp;
-        <select value={technology} onChange={(event) => setTechnology(event.target.value)}>
-          <option value="">Select main technology</option>
-          {technologyOptions.map((option) => (
-            <option key={option} value={option}>
-              {option}
-            </option>
-          ))}
-        </select>
-        .
+    <div className="form-container">
+      <div className="form-header">Welcome to our technology role salary estimator!</div>
+      <p className="form-paragraph">
+        By providing us with the below input, we will use data from the 2018 StackOverflow developer survey to estimate and
+        model your expected salary.
       </p>
-      <button type="submit" disabled={!isFormValid()}>
-        Submit
-      </button>
-      </center>
-    </form>
+      <form onSubmit={handleSubmit}>
+        <div className="form-group">
+          <label htmlFor="career">I am a</label>
+          <select
+            id="career"
+            className="form-select"
+            value={career}
+            onChange={(event) => setCareer(event.target.value)}
+          >
+            <option value="">Select career</option>
+            {careerOptions.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="form-group">
+          <label htmlFor="yearsOfExperience">with</label>
+          <select
+            id="yearsOfExperience"
+            className="form-select"
+            value={yearsOfExperience}
+            onChange={(event) => setYearsOfExperience(event.target.value)}
+          >
+            <option value="">Select years of experience</option>
+            {yearsOptions.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="form-group">
+          <label htmlFor="state">living in</label>
+          <select
+            id="state"
+            className="form-select"
+            value={state}
+            onChange={(event) => setState(event.target.value)}
+          >
+            <option value="">Select state</option>
+            {stateOptions.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="form-group">
+          <label htmlFor="education">My educational background is</label>
+          <select
+            id="education"
+            className="form-select"
+            value={education}
+            onChange={(event) => setEducation(event.target.value)}
+          >
+            <option value="">Select education background</option>
+            {educationOptions.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="form-group">
+          <label htmlFor="technology">and my main technology is</label>
+          <select
+            id="technology"
+            className="form-select"
+            value={technology}
+            onChange={(event) => setTechnology(event.target.value)}
+          >
+            <option value="">Select main technology</option>
+            {technologyOptions.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="form-group">
+          <button type="submit" className="form-button" disabled={!isFormValid()}>
+            Submit
+          </button>
+        </div>
+      </form>
     </div>
   );
-};
+ }
