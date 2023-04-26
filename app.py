@@ -7,13 +7,30 @@ import operations
 
 app = Flask(__name__)
 CORS(app)
-OPS = operations()
 
-@app.route('/api/data', methods=['GET'])
+# commented out for now due to error
+#OPS = operations()
+
+@app.route('/api/data', methods=['GET', 'POST'])
+def data():
+    if request.method == 'GET':
+        return get_data()
+    elif request.method == 'POST':
+        return post_data()
+
 def get_data():
-    myStr = OPS.apiTest()
+    # commented out for now due to error
+    # myStr = OPS.apiTest()
     data = {
         'message': myStr
+    }
+    return jsonify(data)
+
+def post_data():
+    values = request.json
+    print(values)
+    data = {
+        'message': 'Data received'
     }
     return jsonify(data)
 
