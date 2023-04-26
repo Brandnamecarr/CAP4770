@@ -7,14 +7,12 @@ interface FormProps {
 
 const careerOptions = ['Software Engineer', 'Data Scientist', 'Product Manager'];
 const yearsOptions = ['0-2', '2-5', '5+'];
-const stateOptions = ['California', 'New York', 'Texas', 'Florida'];
 const educationOptions = ['Bachelor', 'Master', 'PhD'];
 const technologyOptions = ['Python', 'Java', 'JavaScript', 'C#'];
 
 export const Form: React.FC<FormProps> = ({ onSubmit }) => {
   const [career, setCareer] = useState('');
   const [yearsOfExperience, setYearsOfExperience] = useState('');
-  const [state, setState] = useState('');
   const [education, setEducation] = useState('');
   const [technology, setTechnology] = useState('');
   const [formError, setFormError] = useState('');
@@ -25,11 +23,11 @@ export const Form: React.FC<FormProps> = ({ onSubmit }) => {
       setFormError('Please fill in all fields');
       return;
     }
-    onSubmit({ career, yearsOfExperience, state, education, technology });
+    onSubmit({ career, yearsOfExperience, education, technology });
   };
 
   const isFormValid = () => {
-    return career && yearsOfExperience && state && education && technology;
+    return career && yearsOfExperience && education && technology;
   };
 
   return (
@@ -66,22 +64,6 @@ export const Form: React.FC<FormProps> = ({ onSubmit }) => {
           >
             <option value="">Select years of experience</option>
             {yearsOptions.map((option) => (
-              <option key={option} value={option}>
-                {option}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="form-group">
-          <label htmlFor="state">living in</label>
-          <select
-            id="state"
-            className="form-select"
-            value={state}
-            onChange={(event) => setState(event.target.value)}
-          >
-            <option value="">Select state</option>
-            {stateOptions.map((option) => (
               <option key={option} value={option}>
                 {option}
               </option>
