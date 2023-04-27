@@ -22,13 +22,14 @@ def get_data():
     # commented out for now due to error
     # myStr = OPS.apiTest()
     data = {
-        'message': myStr
+        'message': "getting data"
     }
     return jsonify(data)
 
 def post_data():
     values = request.json
     print(values)
+    operations.apiTest(values)
     data = {
         'message': 'Data received'
     }

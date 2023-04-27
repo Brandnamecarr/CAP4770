@@ -21,7 +21,13 @@ from sklearn.preprocessing import StandardScaler
 logFile = open('data/logs/LOG.txt', "a+")
 
 # test function for api to ensure that operations.py can send data to app.py
-def apiTest():
+def apiTest(values):
+    print("made it to operations.py")
+    if len(values) > 0:
+        for item in values.values():
+            print(item)
+    else:
+        print("None")
     return "Test from operations.py"
 
 # read column txt file.
@@ -378,4 +384,4 @@ def main():
 
     df2 = predict_salary(df2)
 
-main()
+# main()
