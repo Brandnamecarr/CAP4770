@@ -284,8 +284,8 @@ def Helper_Salary_Formatter(df):
 # ML Function
 # will add parameters here to format the 'input' from the form on the React site.
 def predict_salary(df): 
-    print("Data types:")
-    print(df.dtypes)
+    # print("Data types:")
+    # print(df.dtypes)
     # need to encode some features so the model will run correctly
     le = preprocessing.LabelEncoder()
     originalValues = df['DevType'].tolist() # catch OG values from DEVTYPE column.
@@ -377,7 +377,7 @@ def main():
 
     # branches to function to format DevType column. Replaces the DevType column in the df.
     df2 = format_DevType_Column(df2)
-    print(df2.columns)
+    #print(df2.columns)
     df2 = YearsExperience_Converter(df2)
     df2 = Education_Converter(df2)
     df2 = Salary_Formatter(df2)

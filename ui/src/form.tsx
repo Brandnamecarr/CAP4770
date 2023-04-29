@@ -5,9 +5,9 @@ interface FormProps {
   onSubmit: (values: Record<string, string>) => void;
 }
 
-const careerOptions = ['Software Engineer', 'Data Scientist', 'Product Manager'];
-const yearsOptions = ['0-2', '2-5', '5+'];
-const educationOptions = ['Bachelor', 'Master', 'PhD'];
+const careerOptions = ['Software Engineer', 'Data Scientist', 'Product Manager', 'Student'];
+const yearsOptions = ['0-2', '2-5', '5-10', '10+'];
+const educationOptions = ['Associates', 'Bachelor', 'Master', 'PhD'];
 const technologyOptions = ['Python', 'Java', 'JavaScript', 'C#'];
 
 export const Form: React.FC<FormProps> = ({ onSubmit }) => {

@@ -8,9 +8,6 @@ import operations
 app = Flask(__name__)
 CORS(app)
 
-# commented out for now due to error
-#OPS = operations()
-
 @app.route('/api/data', methods=['GET', 'POST'])
 def data():
     if request.method == 'GET':
