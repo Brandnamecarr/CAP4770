@@ -22,10 +22,12 @@ logFile = open('data/logs/LOG.txt', "a+")
 
 # test function for api to ensure that operations.py can send data to app.py
 def apiTest(values):
-    print("made it to operations.py")
     if len(values) > 0:
-        for item in values.values():
-            print(item)
+        print(type(values))
+        temp = values.values().tolist()
+        print("temp: ", type(temp))
+        # for item in values.values():
+        #     print(item)
     else:
         print("None")
     return "Test from operations.py"
@@ -78,9 +80,11 @@ def format_DevType_Column(df):
             stu_count += 1
         elif newStr == 'Miscellaneous':
             misc_count += 1
-    print("sw_Count: {}, ds_count: {}, mgmt_count: {}, stu_count: {}, misc_count: {}".format(sw_Count, ds_count, mgmt_count, stu_count, misc_count))
+    #print("sw_Count: {}, ds_count: {}, mgmt_count: {}, stu_count: {}, misc_count: {}".format(sw_Count, ds_count, mgmt_count, stu_count, misc_count))
     sum = sw_Count + ds_count + mgmt_count + stu_count + misc_count
-    print("Counted(sum): {}, lenStringsDevType: {}".format(sum, len(DevTypeList)))
+    if sum != len(DevTypeList):
+        logFile.write("Warning: line 85: something went wrong.\n")
+    #print("Counted(sum): {}, lenStringsDevType: {}".format(sum, len(DevTypeList)))
     
     df['DevType'] = DevTypeList
     return df
@@ -283,7 +287,9 @@ def Helper_Salary_Formatter(df):
 
 # ML Function
 # will add parameters here to format the 'input' from the form on the React site.
-def predict_salary(df): 
+def predict_salary(values): 
+    df = initialize_dataframe()
+    yearsCodingList = df['YearsCoding'].unique()
     # print("Data types:")
     # print(df.dtypes)
     # need to encode some features so the model will run correctly
@@ -329,23 +335,104 @@ def predict_salary(df):
     
     # call test_train_split 
     x_train, x_test, y_train, y_test = train_test_split(X, Y)
+
+    # need to encode the prediction values:
+    _devType, _yearsCoding, _formalEdu, _techStack = format_selections(values)
+    
+    if _yearsCoding not in yearsCodingList:
+        _yearsCoding = '0-2'
+
+    d = le.transform([_devType])
+    ye = le_YE.transform([_yearsCoding])
+    tech = le_PL.transform([_techStack])
+    fe = le_FE.transform([_formalEdu])
+ 
+    X = pd.DataFrame()
+    X['DevType'] = d
+    X['YearsExperience'] = ye
+    X['FormalEducation'] = fe
+    X['Technology'] = tech
+    X.columns = ['DevType', 'YearsCoding', 'FormalEducation', 'LanguageWorkedWith']
     
     
 #     # initialize and train the model using SVM classifier (SVC)
     clf = tree.DecisionTreeClassifier()
     clf.fit(x_train, y_train)
+
     # calculate the accuracy score of the model
     score = clf.score(x_test, y_test)
-    print("Score: {}".format(score))
-    
-    clf2 = make_pipeline(StandardScaler(), SVC(gamma='auto'))
-    clf2.fit(x_train, y_train)
-    score2 = clf2.score(x_test, y_test)
-    print("Score2: {}".format(score2))
-    
-    
-    return df
+    print("Decision Tree Classifier Score: {}".format(score))
 
+    # predict(X) yields a Numpy ndarray.
+    predicted_salary = clf.predict(X)
+    
+    # translate from encoded value to decoded value:
+    predicted_salary_value = le_salary.inverse_transform(predicted_salary)
+
+    try:
+        predicted_salary_value = str(predicted_salary_value[0])
+        predicted_salary_value += '0'
+        predicted_salary_value = float(predicted_salary_value)
+        
+    except:
+        logFile.write("Error: failed to convert predicted_salary_value from ndarray to float.\n")
+        return "ERROR"
+
+    return predicted_salary_value
+
+
+# function to format the values passed-in from the React form
+def format_selections(values):
+    
+    devTypeStr = DevType_Converter(values['career'])
+    yrsExp = YE_Converter(values['yearsOfExperience'])
+    fmlEducation = edu_Converter(values['education'])
+    techStack = values['technology']
+
+    return devTypeStr, yrsExp, fmlEducation, techStack
+
+    
+
+# helper to convert YearsExperience for the predict() function
+def YE_Converter(value):
+    value = value.replace(' years', '')
+    value = value.replace(' or more', '+')
+    if value.find('nan') != -1:
+        print("HERE")
+        value = '0'
+    return value
+
+# helper to convert FormalEducation for the predict() function:
+def edu_Converter(value):
+        if value.find('Some') != -1:
+            return('Some College/No Degree')
+        
+        elif value.find('Associate') != -1:
+            return("Associate's")
+            
+        elif value.find("Bachelor") != -1:
+            return("Bachelor's")
+            
+        elif value.find("Maste") != -1:
+            return("Master's")
+            
+        elif value.find('doctoral') != -1:
+            return("Doctoral")
+            
+        elif value.find('Secondary') != -1:
+            return('Secondary (High School)')
+        
+        elif value.find('I never completed') != -1:
+            return('None')
+            
+        elif value.find('Primary') != -1:
+            return('Elementary')
+        
+        elif value.find('Professional') != -1:
+            return('Professional (JD, MD, etc.)')
+        
+        else: 
+            return "None"
 
 # machine learning function for Support Vector Regression
 def svr_regression(df, career, experience, state, degreeType, technology):
@@ -355,16 +442,11 @@ def svr_regression(df, career, experience, state, degreeType, technology):
     x_test, y_test, x_train, y_train = train_test_split(X, Y)
     regr.predict([[career, experience, state, degreeType, technology]])
 
-def main():
-    #test_DevType_Converter()
-    # print(os.getcwd())
-    # checkFile('data/original/survey_results_public.csv')
-    # get the list of columns
-    columnList = read_column_file()
 
-    # import the CSV file.
+def initialize_dataframe():
+    # read in the CSV 
     df = pd.read_csv('data/original/survey_results_public.csv', low_memory=False, index_col=False)
-
+    
     # drop rows where country != 'United States'
     df_new = df[df['Country'] == 'United States']
 
@@ -372,16 +454,42 @@ def main():
     df1 = df_new[['DevType','YearsCoding', 'FormalEducation', 'LanguageWorkedWith', 'Salary']]
     df1 = df1.dropna()
 
-    # running into data problems, need to reformat some of the data values to help with prediction
-    df2 = df1.copy()
-
     # branches to function to format DevType column. Replaces the DevType column in the df.
-    df2 = format_DevType_Column(df2)
+    df2 = format_DevType_Column(df1)
     #print(df2.columns)
     df2 = YearsExperience_Converter(df2)
     df2 = Education_Converter(df2)
     df2 = Salary_Formatter(df2)
 
-    df2 = predict_salary(df2)
+    return df2
 
-# main()
+# def main():
+#     #test_DevType_Converter()
+#     # print(os.getcwd())
+#     # checkFile('data/original/survey_results_public.csv')
+#     # get the list of columns
+#     columnList = read_column_file()
+
+#     # import the CSV file.
+#     df = pd.read_csv('data/original/survey_results_public.csv', low_memory=False, index_col=False)
+
+#     # drop rows where country != 'United States'
+#     df_new = df[df['Country'] == 'United States']
+
+#     # drop unnecessary columns from the data frame.
+#     df1 = df_new[['DevType','YearsCoding', 'FormalEducation', 'LanguageWorkedWith', 'Salary']]
+#     df1 = df1.dropna()
+
+#     # running into data problems, need to reformat some of the data values to help with prediction
+#     df2 = df1.copy()
+
+#     # branches to function to format DevType column. Replaces the DevType column in the df.
+#     df2 = format_DevType_Column(df2)
+#     #print(df2.columns)
+#     df2 = YearsExperience_Converter(df2)
+#     df2 = Education_Converter(df2)
+#     df2 = Salary_Formatter(df2)
+
+#     df2 = predict_salary(df2)
+
+# # main()

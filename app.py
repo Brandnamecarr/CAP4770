@@ -25,11 +25,21 @@ def get_data():
 
 def post_data():
     values = request.json
-    print(values)
-    operations.apiTest(values)
-    data = {
-        'message': 'Data received'
-    }
+    #print(values)
+    predicted_salary_value = operations.predict_salary(values)
+    if predicted_salary_value == 'ERROR':
+        data = {
+            'status' : 'FAILURE',
+            'message': 'error while making prediction',
+            'predicted_salary': -1
+        }
+    else:
+        data = {
+            'status' : 'SUCCESS',
+            'message': 'Data received',
+            'predicted_salary': predicted_salary_value
+        }
+    print(data)
     return jsonify(data)
 
 @app.route('/api/string', methods=['GET'])
