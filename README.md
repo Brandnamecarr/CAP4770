@@ -1,3 +1,6 @@
+# put the /data folder into a .zip to safe space haha
+
+
 # CAP4770
 Semester Project for CAP4770 @ The University of Florida
 
